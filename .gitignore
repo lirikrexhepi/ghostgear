@@ -1,0 +1,17 @@
+node_modules/
+dist/
+*.local
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+*.log
+.vite/
+coverage/
+playwright-report/
+test-results/
+tests/report.json
+tests/last-run.txt
+shot.png
+*.done

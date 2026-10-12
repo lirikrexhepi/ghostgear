@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viewer 3D dev</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Orbitron:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/viewer3d/dev/dev.css">
+</head>
+<body>
+  <main class="dev">
+    <header class="dev-head">
+      <h1>Viewer 3D</h1>
+      <div class="dev-tools">
+        <button data-act="theme">Theme</button>
+        <button data-act="live">Live input</button>
+        <button data-act="rotate">Auto-rotate</button>
+        <button data-act="export">Export GLB</button>
+      </div>
+    </header>
+    <section class="dev-grid">
+      <article class="dev-card" data-device="keyboard">
+        <div class="dev-stage" id="stage-keyboard"></div>
+        <div class="dev-controls" data-for="keyboard"></div>
+      </article>
+      <article class="dev-card" data-device="mouse">
+        <div class="dev-stage" id="stage-mouse"></div>
+        <div class="dev-controls" data-for="mouse"></div>
+      </article>
+    </section>
+    <section class="dev-log">
+      <div class="dev-log-head"><span>Events</span><button data-act="clear-log">Clear</button></div>
+      <pre id="log"></pre>
+    </section>
+  </main>
+  <script type="module" src="./src/viewer3d/dev/dev.js"></script>
+</body>
+</html>
