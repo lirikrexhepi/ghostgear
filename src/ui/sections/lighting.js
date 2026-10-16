@@ -160,6 +160,7 @@ export class LightingSection {
     let layout = null;
     let order = null;
     let lastOff = false;
+    const custom = readCustom();
     const tick = now => {
       this.raf = requestAnimationFrame(tick);
       const v = this.ctx && this.ctx.viewer;
@@ -183,6 +184,12 @@ export class LightingSection {
         return;
       }
       lastOff = false;
+      if (effect === 13) {
+        v.clearPartLights();
+        custom.forEach(([id, c]) => v.setPartLight(id, (c[0] / 255) * level * 1.4, (c[1] / 255) * level * 1.4, (c[2] / 255) * level * 1.4));
+        v.setRGB(null);
+        return;
+      }
       const t = ((now - start) / 1000) * (0.35 + s.speed * 0.2);
       const base = hexToRgb(s.rgb);
       let sr = 0;
@@ -231,6 +238,18 @@ function hslToRgb(h) {
     return 0.5 - 0.5 * Math.max(-1, Math.min(k - 3, 9 - k, 1));
   };
   return [f(0), f(8), f(4)];
+}
+
+function readCustom() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('gear_paint_current') || '{}');
+    return Object.entries(raw).map(([id, hexColor]) => [
+      id === 'IntlRo' ? 'Backslash' : id,
+      [parseInt(hexColor.slice(1, 3), 16), parseInt(hexColor.slice(3, 5), 16), parseInt(hexColor.slice(5, 7), 16)]
+    ]);
+  } catch (e) {
+    return [];
+  }
 }
 
 function lightAt(effect, p, t, count) {

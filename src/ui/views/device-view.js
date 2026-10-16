@@ -8,6 +8,7 @@ import { deviceStatus } from './home-view.js';
 import { toast } from '../toast.js';
 import { KeysSection } from '../sections/keys.js';
 import { LightingSection } from '../sections/lighting.js';
+import { PaintSection } from '../sections/paint.js';
 import { KeyboardSettingsSection } from '../sections/keyboard-settings.js';
 import { ButtonsSection } from '../sections/buttons.js';
 import { DpiSection } from '../sections/dpi.js';
@@ -25,7 +26,7 @@ export class DeviceView {
     this.container = container;
     this.device = device;
     if (device.type === 'keyboard') {
-      this.sections = [new KeysSection(), new LightingSection(), new KeyboardSettingsSection()];
+      this.sections = [new KeysSection(), new LightingSection(), new PaintSection(), new KeyboardSettingsSection()];
     } else if (device.type === 'mouse') {
       this.sections = [new ButtonsSection(), new DpiSection(), new MouseSettingsSection()];
     } else {
@@ -133,7 +134,7 @@ export class DeviceView {
       nudged = true;
       toast(`Preview only. Add your ${this.device.type} on the home screen to apply changes.`, 4200);
     };
-    ['device:lighting_updated', 'device:debounce_updated', 'device:sleep_updated', 'device:keymap_updated', 'device:sidetone_updated', 'mouse:button_remapped', 'mouse:dpi_updated', 'mouse:polling_updated', 'mouse:param_updated', 'mouse:lod_updated', 'mouse:sleep_updated', 'mouse:debounce_updated'].forEach(ev => this.offs.push(eventBus.on(ev, nudge)));
+    ['device:lighting_updated', 'device:perkey_updated', 'device:debounce_updated', 'device:sleep_updated', 'device:keymap_updated', 'device:sidetone_updated', 'mouse:button_remapped', 'mouse:dpi_updated', 'mouse:polling_updated', 'mouse:param_updated', 'mouse:lod_updated', 'mouse:sleep_updated', 'mouse:debounce_updated'].forEach(ev => this.offs.push(eventBus.on(ev, nudge)));
 
     this.show(initial);
     this.mount3d.ready.then(viewer => {

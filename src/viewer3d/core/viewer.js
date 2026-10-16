@@ -101,6 +101,12 @@ function mountFallback(container, options) {
     setLabel: noop,
     setDisabled: noop,
     setRGB: noop,
+    setPartLight: noop,
+    clearPartLights: noop,
+    setPartTint: noop,
+    resetPartTints: noop,
+    getPartLayout: () => [],
+    setPaintHandler: noop,
     setTheme: noop,
     setView: noop,
     resetView: noop,
@@ -792,7 +798,28 @@ export function createDeviceViewer(initialContainer, userOptions = {}) {
   };
   canvas.addEventListener('wheel', onWheelCapture, { passive: false, capture: true });
 
+  let paintHandler = null;
+  let paintActive = false;
+  let paintLast = null;
+
+  const onPaintDown = e => {
+    if (!paintHandler || (e.pointerType === 'mouse' && e.button > 2)) return;
+    const id = pickAt(e.clientX, e.clientY);
+    if (!id || disabled.has(id)) return;
+    paintActive = true;
+    paintLast = id;
+    controls.enabled = false;
+    setHover(null);
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch (err) {
+      paintActive = true;
+    }
+    paintHandler(id, { button: e.button, first: true });
+  };
+
   const onPointerDown = e => {
+    if (paintActive) return;
     if (e.pointerType === 'mouse' && e.button > 2) return;
     pointer.down = true;
     pointer.dragged = false;
@@ -809,6 +836,14 @@ export function createDeviceViewer(initialContainer, userOptions = {}) {
   };
 
   const onPointerMove = e => {
+    if (paintActive) {
+      const id = pickAt(e.clientX, e.clientY);
+      if (id && id !== paintLast && !disabled.has(id)) {
+        paintLast = id;
+        paintHandler(id, { button: 0, first: false });
+      }
+      return;
+    }
     pointer.x = e.clientX;
     pointer.y = e.clientY;
     if (pointer.down && !pointer.dragged) {
@@ -826,6 +861,12 @@ export function createDeviceViewer(initialContainer, userOptions = {}) {
   };
 
   const finishPointer = (e, cancelled) => {
+    if (paintActive) {
+      paintActive = false;
+      paintLast = null;
+      controls.enabled = true;
+      return;
+    }
     if (!pointer.down) return;
     const wasDragged = pointer.dragged;
     const pressId = pointer.pressId;
@@ -850,6 +891,7 @@ export function createDeviceViewer(initialContainer, userOptions = {}) {
     if (!pointer.down) setHover(null);
   };
 
+  canvas.addEventListener('pointerdown', onPaintDown, true);
   canvas.addEventListener('pointerdown', onPointerDown);
   canvas.addEventListener('pointermove', onPointerMove);
   canvas.addEventListener('pointerup', onPointerUp);
@@ -1169,6 +1211,13 @@ export function createDeviceViewer(initialContainer, userOptions = {}) {
       partsById.forEach(p => animator.refresh(p));
       invalidate();
     },
+    setPaintHandler(fn) {
+      paintHandler = typeof fn === 'function' ? fn : null;
+      if (!paintHandler && paintActive) {
+        paintActive = false;
+        controls.enabled = true;
+      }
+    },
     setInteractive(on) {
       options.interactive = !!on;
       if (!on) setHover(null);
@@ -1376,6 +1425,7 @@ export function createDeviceViewer(initialContainer, userOptions = {}) {
       canvas.removeEventListener('webglcontextlost', onContextLost);
       canvas.removeEventListener('webglcontextrestored', onContextRestored);
       canvas.removeEventListener('wheel', onWheelCapture, true);
+      canvas.removeEventListener('pointerdown', onPaintDown, true);
       canvas.removeEventListener('pointerdown', onPointerDown);
       canvas.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerup', onPointerUp);

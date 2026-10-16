@@ -1421,3 +1421,71 @@ input[type='range']::-moz-range-thumb {
 .row:hover .i-link {
   animation: icon-arc 1200ms ease-in-out infinite;
 }
+
+.paint-actions {
+  display: flex;
+  gap: 18px;
+  padding: 12px 2px 0;
+}
+
+.group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.list-item.pattern {
+  gap: 10px;
+  padding-right: 2px;
+}
+
+.pattern-name {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  font-size: 14px;
+  padding: 10px 0;
+}
+
+.pattern-delete {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--text-3);
+  transition: color 160ms, background 160ms;
+}
+
+.pattern-delete:hover {
+  color: var(--danger);
+  background: var(--surface-2);
+}
+
+.pattern-delete svg {
+  width: 14px;
+  height: 14px;
+}
+
+.primary-button {
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 13px;
+  font-weight: 500;
+  transition: opacity 160ms, transform 160ms var(--ease);
+}
+
+.primary-button:hover {
+  opacity: 0.88;
+}
+
+.primary-button:active {
+  transform: scale(0.97);
+}
+
+.primary-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}

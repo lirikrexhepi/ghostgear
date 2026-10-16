@@ -12,6 +12,7 @@ export const LIGHT_EFFECTS = [
   { id: 'LightSineWave', name: 'Sine Wave', index: 10 },
   { id: 'LightKaleidoscope', name: 'Kaleidoscope', index: 11 },
   { id: 'LightLineWave', name: 'Line Wave', index: 12 },
+  { id: 'LightUserDefine', name: 'Custom', index: 13 },
   { id: 'LightLaser', name: 'Laser', index: 14 },
   { id: 'LightCircleWave', name: 'Circle Wave', index: 15 },
   { id: 'LightDazzing', name: 'Dazzle', index: 16 },
@@ -34,6 +35,11 @@ export class MK12Protocol {
   static CMD_GET_DEBOUNCE = 0x91;
   static CMD_SET_SLEEPTIME = 0x12;
   static CMD_GET_SLEEPTIME = 0x92;
+
+  static CMD_SET_PERKEY = 0x0c;
+  static PERKEY_LEDS = 128;
+  static PERKEY_PACKET_DATA = 56;
+  static EFFECT_CUSTOM = 13;
 
   static MAX_SPEED = 7;
   static MAX_BRIGHT = 4;
@@ -68,6 +74,30 @@ export class MK12Protocol {
     packet[6] = (rgb >> 8) & 0xff;
     packet[7] = rgb & 0xff;
     return this.finalize(packet, 8);
+  }
+
+  static buildPerKeyPackets(colors) {
+    const total = this.PERKEY_LEDS * 3;
+    const data = new Uint8Array(total);
+    colors.forEach((rgb, led) => {
+      if (led < 0 || led >= this.PERKEY_LEDS) return;
+      data[led * 3] = rgb[0] & 0xff;
+      data[led * 3 + 1] = rgb[1] & 0xff;
+      data[led * 3 + 2] = rgb[2] & 0xff;
+    });
+    const count = Math.ceil(total / this.PERKEY_PACKET_DATA);
+    const packets = [];
+    for (let seq = 0; seq < count; seq += 1) {
+      const packet = new Uint8Array(this.REPORT_SIZE);
+      packet[0] = this.CMD_SET_PERKEY;
+      packet[2] = total & 0xff;
+      packet[3] = total >> 8;
+      packet[4] = seq;
+      this.finalize(packet, 7);
+      packet.set(data.subarray(seq * this.PERKEY_PACKET_DATA, (seq + 1) * this.PERKEY_PACKET_DATA), 8);
+      packets.push(packet);
+    }
+    return packets;
   }
 
   static buildSetDebouncePacket(ms) {

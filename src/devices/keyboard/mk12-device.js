@@ -1,9 +1,10 @@
 import { BaseDevice } from '../base-device.js';
 import { MK12Protocol, LIGHT_EFFECTS } from './mk12-protocol.js';
-import { MK12_LAYOUT } from './mk12-layout.js';
+import { MK12_LAYOUT, MK12_LED_INDEX } from './mk12-layout.js';
 import { eventBus } from '../../core/event-bus.js';
 
 const LED_WRITE_DELAY_MS = 45;
+const PERKEY_PACKET_GAP_MS = 100;
 
 export class MeetionMK12Device extends BaseDevice {
   constructor(options = {}) {
@@ -80,6 +81,28 @@ export class MeetionMK12Device extends BaseDevice {
           .catch(() => waiters.forEach(w => w(false)));
       }, LED_WRITE_DELAY_MS);
     });
+  }
+
+  async writePerKey(colorsByKeyId) {
+    const colors = new Map();
+    colorsByKeyId.forEach((rgb, keyId) => {
+      const led = MK12_LED_INDEX[keyId];
+      if (led != null) colors.set(led, rgb);
+    });
+    if (this.isMock) {
+      eventBus.emit('device:perkey_updated', colorsByKeyId);
+      return true;
+    }
+    if (this.lightState.effectIndex !== MK12Protocol.EFFECT_CUSTOM) {
+      await this.setLighting({ effectIndex: MK12Protocol.EFFECT_CUSTOM });
+    }
+    const packets = MK12Protocol.buildPerKeyPackets(colors);
+    for (let i = 0; i < packets.length; i += 1) {
+      await this.write(packets[i]);
+      if (i < packets.length - 1) await this.sleep(PERKEY_PACKET_GAP_MS);
+    }
+    eventBus.emit('device:perkey_updated', colorsByKeyId);
+    return true;
   }
 
   async setDebounce(ms) {

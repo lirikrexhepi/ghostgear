@@ -135,3 +135,16 @@ export const REMAP_KEY_CATEGORIES = [
     ]
   }
 ];
+
+export const MK12_LED_INDEX = {
+  Escape: 1, Digit1: 7, Digit2: 13, Digit3: 19, Digit4: 25, Digit5: 31, Digit6: 37, Digit7: 43, Digit8: 49, Digit9: 55,
+  Digit0: 61, Minus: 67, Equal: 73, Backspace: 79, LED_Mode: 85,
+  Tab: 2, KeyQ: 8, KeyW: 14, KeyE: 20, KeyR: 26, KeyT: 32, KeyY: 38, KeyU: 44, KeyI: 50, KeyO: 56, KeyP: 62,
+  BracketLeft: 68, BracketRight: 74, Insert: 86,
+  CapsLock: 3, KeyA: 9, KeyS: 15, KeyD: 21, KeyF: 27, KeyG: 33, KeyH: 39, KeyJ: 45, KeyK: 51, KeyL: 57,
+  Semicolon: 63, Quote: 69, IntlRo: 75, Enter: 81, PageUp: 87,
+  ShiftLeft: 4, KeyZ: 16, KeyX: 22, KeyC: 28, KeyV: 34, KeyB: 40, KeyN: 46, KeyM: 52, Comma: 58, Period: 64, Slash: 70,
+  ShiftRight: 76, ArrowUp: 82, PageDown: 88,
+  ControlLeft: 5, MetaLeft: 17, AltLeft: 23, Space: 41, AltRight: 59, Fn: 65, ControlRight: 71,
+  ArrowLeft: 77, ArrowDown: 83, ArrowRight: 89
+};
