@@ -196,6 +196,6 @@ export class KeysSection {
       this.syncLabels();
       this.render();
     });
-    foot.append(el('span', { text: `${count} remapped · not saved to the keyboard yet` }), resetAll);
+    foot.append(el('span', { text: `${count} remapped · ${this.device.isMock ? 'demo device' : this.device.supports && this.device.supports.keymap ? 'saved to the keyboard' : 'not saved to the keyboard yet'}` }), resetAll);
   }
 }

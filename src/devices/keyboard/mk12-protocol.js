@@ -36,6 +36,13 @@ export class MK12Protocol {
   static CMD_SET_SLEEPTIME = 0x12;
   static CMD_GET_SLEEPTIME = 0x92;
 
+  static CMD_SET_KEY = 0x13;
+  static CMD_SET_KEYMAP = 0x09;
+  static CMD_GET_KEYMAP = 0x89;
+  static KEYMAP_ENTRIES = 126;
+  static KEYMAP_PAGES = 8;
+  static KEYMAP_PACKET_DATA = 56;
+  static CONSUMER = { 205: [3, 0, 205, 0], 181: [3, 0, 181, 0], 182: [3, 0, 182, 0], 148: [3, 0, 146, 1] };
   static CMD_SET_PERKEY = 0x0c;
   static PERKEY_LEDS = 128;
   static PERKEY_PACKET_DATA = 56;
@@ -74,6 +81,62 @@ export class MK12Protocol {
     packet[6] = (rgb >> 8) & 0xff;
     packet[7] = rgb & 0xff;
     return this.finalize(packet, 8);
+  }
+
+  static entryForCode(code) {
+    return this.CONSUMER[code] ? Uint8Array.from(this.CONSUMER[code]) : Uint8Array.from([0, 0, code & 0xff, 0]);
+  }
+
+  static codeForEntry(entry) {
+    if (entry[0] === 0 && entry[1] === 0 && entry[3] === 0) return entry[2];
+    const hit = Object.entries(this.CONSUMER).find(([, e]) => e[0] === entry[0] && e[1] === entry[1] && e[2] === entry[2] && e[3] === entry[3]);
+    return hit ? Number(hit[0]) : null;
+  }
+
+  static buildGetKeymapPacket(layer, page) {
+    const packet = new Uint8Array(this.REPORT_SIZE);
+    packet[0] = this.CMD_GET_KEYMAP;
+    packet[1] = layer;
+    packet[2] = page;
+    return this.finalize(packet, 7);
+  }
+
+  static buildSetKeyPacket(layer, index, entry) {
+    const packet = new Uint8Array(this.REPORT_SIZE);
+    packet[0] = this.CMD_SET_KEY;
+    packet[1] = layer;
+    packet[2] = index;
+    this.finalize(packet, 7);
+    packet.set(entry, 8);
+    return packet;
+  }
+
+  static buildSetKeymapPackets(layer, entries) {
+    const total = this.KEYMAP_ENTRIES * 4;
+    const data = new Uint8Array(total);
+    entries.slice(0, this.KEYMAP_ENTRIES).forEach((entry, i) => data.set(entry, i * 4));
+    const count = Math.ceil(total / this.KEYMAP_PACKET_DATA);
+    const packets = [];
+    for (let seq = 0; seq < count; seq += 1) {
+      const packet = new Uint8Array(this.REPORT_SIZE);
+      packet[0] = this.CMD_SET_KEYMAP;
+      packet[1] = layer;
+      packet[2] = total & 0xff;
+      packet[3] = total >> 8;
+      packet[4] = seq;
+      this.finalize(packet, 7);
+      packet.set(data.subarray(seq * this.KEYMAP_PACKET_DATA, (seq + 1) * this.KEYMAP_PACKET_DATA), 8);
+      packets.push(packet);
+    }
+    return packets;
+  }
+
+  static parseKeymapPage(bytes) {
+    if (!bytes) return null;
+    const offset = bytes.length >= 65 ? 1 : 0;
+    const entries = [];
+    for (let k = 0; k < 16; k += 1) entries.push(Uint8Array.from(bytes.subarray(offset + k * 4, offset + k * 4 + 4)));
+    return entries;
   }
 
   static buildPerKeyPackets(colors) {
