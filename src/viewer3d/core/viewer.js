@@ -6,6 +6,10 @@ import { VIEWER_THEME, cloneTheme } from '../theme.js';
 import { PartAnimator } from './part.js';
 import { buildKeyboardModel } from '../keyboard/keyboard-model.js';
 import { buildMouseModel } from '../mouse/mouse-model.js';
+import { buildHeadsetModel } from '../headset/headset-model.js';
+
+const DEVICE_LABEL = { keyboard: 'Interactive 3D keyboard', mouse: 'Interactive 3D mouse', headset: 'Interactive 3D headset' };
+const normalizeDevice = d => (d === 'mouse' || d === 'headset' ? d : 'keyboard');
 import { KEY_ID_BY_EVENT_CODE } from '../keyboard/layout.js';
 
 const DRAG_THRESHOLD_PX = 4;
@@ -27,6 +31,14 @@ const VIEW_PRESETS = {
     back: { az: 0, el: 12 },
     side: { az: 270, el: 6 },
     bottom: { az: 215, el: -70 }
+  },
+  headset: {
+    home: null,
+    top: { az: 0, el: 89.5 },
+    front: { az: 0, el: 8 },
+    back: { az: 180, el: 8 },
+    side: { az: 90, el: 6 },
+    bottom: { az: 0, el: 8 }
   }
 };
 
@@ -134,7 +146,7 @@ function getParking() {
 }
 
 export function acquireDeviceViewer(container, options = {}) {
-  const device = options.device === 'mouse' ? 'mouse' : 'keyboard';
+  const device = normalizeDevice(options.device);
   const parked = pool.get(device);
   console.log('ACQUIRE', device, !!parked, performance.now());
   if (parked) {
@@ -204,10 +216,7 @@ export function createDeviceViewer(initialContainer, userOptions = {}) {
   container.appendChild(host);
   container.tabIndex = container.tabIndex >= 0 ? container.tabIndex : 0;
   container.setAttribute('role', 'application');
-  container.setAttribute(
-    'aria-label',
-    options.device === 'keyboard' ? 'Interactive 3D keyboard' : 'Interactive 3D mouse'
-  );
+  container.setAttribute('aria-label', DEVICE_LABEL[normalizeDevice(options.device)]);
 
   let renderer;
   try {
@@ -273,7 +282,7 @@ export function createDeviceViewer(initialContainer, userOptions = {}) {
   underLight.position.set(60, -260, 120);
   scene.add(keyLight, fillLight, rimLight, underLight);
 
-  const builder = options.device === 'mouse' ? buildMouseModel : buildKeyboardModel;
+  const builder = { mouse: buildMouseModel, headset: buildHeadsetModel }[options.device] || buildKeyboardModel;
   const model = builder({ theme: themeData, maxAnisotropy: maxAniso, dimensions: options.dimensions });
   scene.add(model.root);
   if (options.partNames) {
@@ -714,7 +723,7 @@ export function createDeviceViewer(initialContainer, userOptions = {}) {
     controls.minDistance = homeDistance * 0.28;
     controls.maxDistance = homeDistance * 2.4;
     controls.minPolarAngle = 0;
-    controls.maxPolarAngle = options.device === 'keyboard' ? (Math.PI / 180) * 88 : Math.PI;
+    controls.maxPolarAngle = options.device === 'mouse' ? Math.PI : (Math.PI / 180) * 88;
     if (!userMovedCamera) {
       controls.target.copy(target);
       camera.position.copy(target).addScaledVector(homeDir, homeDistance);
@@ -1339,10 +1348,7 @@ export function createDeviceViewer(initialContainer, userOptions = {}) {
       container.appendChild(host);
       container.tabIndex = container.tabIndex >= 0 ? container.tabIndex : 0;
       container.setAttribute('role', 'application');
-      container.setAttribute(
-        'aria-label',
-        options.device === 'keyboard' ? 'Interactive 3D keyboard' : 'Interactive 3D mouse'
-      );
+      container.setAttribute('aria-label', DEVICE_LABEL[normalizeDevice(options.device)]);
       container.addEventListener('keydown', onKeyDown);
       resetState();
       if (options.partNames) {
