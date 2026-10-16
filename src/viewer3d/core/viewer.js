@@ -229,7 +229,12 @@ export function createDeviceViewer(initialContainer, userOptions = {}) {
   const tooltip = doc.createElement('div');
   tooltip.setAttribute('aria-hidden', 'true');
   tooltip.style.cssText =
-    'position:absolute;left:0;top:0;transform:translate(-9999px,-9999px);padding:6px 10px;border-radius:10px;background:rgba(17,17,17,0.92);color:#fff;font:500 12px/1.3 Geist,system-ui,sans-serif;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 120ms;box-shadow:0 6px 18px rgba(0,0,0,0.25);';
+    'position:absolute;left:0;top:0;transform:translate(-9999px,-9999px);display:flex;flex-direction:column;gap:2px;padding:8px 14px 9px;border-radius:12px;background:var(--surface,#fff);color:var(--text,#111);font-family:Geist,system-ui,sans-serif;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 120ms;box-shadow:0 0 0 1px var(--line,rgba(0,0,0,0.06)),0 6px 20px rgba(0,0,0,0.14);';
+  const tooltipSub = doc.createElement('span');
+  tooltipSub.style.cssText = 'font:500 11px/1.2 Geist,system-ui,sans-serif;color:var(--text-3,#a1a1a6);';
+  const tooltipMain = doc.createElement('span');
+  tooltipMain.style.cssText = 'font:600 14px/1.25 Geist,system-ui,sans-serif;letter-spacing:-0.01em;';
+  tooltip.append(tooltipSub, tooltipMain);
   overlay.appendChild(tooltip);
 
   const live = doc.createElement('div');
@@ -460,13 +465,15 @@ export function createDeviceViewer(initialContainer, userOptions = {}) {
     }
     const part = partsById.get(hoveredId);
     const extra = describe(hoveredId);
-    tooltip.textContent = extra ? `${part.name}  →  ${extra}` : part.name;
+    tooltipSub.textContent = extra ? part.name : '';
+    tooltipSub.style.display = extra ? '' : 'none';
+    tooltipMain.textContent = extra || part.name;
   }
 
   function placeTooltip(clientX, clientY) {
     const r = host.getBoundingClientRect();
     const x = Math.min(Math.max(clientX - r.left + 14, 4), Math.max(4, r.width - 160));
-    const y = Math.max(clientY - r.top - 36, 4);
+    const y = Math.max(clientY - r.top - (tooltipSub.style.display === 'none' ? 40 : 58), 4);
     tooltip.style.transform = `translate(${x}px,${y}px)`;
     tooltip.style.opacity = '1';
   }

@@ -78,7 +78,7 @@ export class HomeView {
         <div class="device-grid">
           ${cards}
         </div>
-        ${state.devices.length === 0 && hidManager.restored ? '<p class="home-note home-empty">No devices connected. Plug in your receiver or cable, then press +.</p>' : ''}
+        ${state.devices.length === 0 && hidManager.restored ? '<p class="home-empty">No devices connected</p>' : ''}
         <p class="home-note">Use the receiver or a cable. Bluetooth isn't supported.</p>
         <button class="home-add" id="btn-add" aria-label="Add device">${PLUS}</button>
       </div>

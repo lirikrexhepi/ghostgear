@@ -1,7 +1,14 @@
-import { el, group, header, slider, toggle, row, segmented } from '../controls.js';
+import { el, group, header, slider, toggle, row, stack, segmented } from '../controls.js';
 
-const SLEEP = ['30s', '1min', '2min', '4min', '5min', '10min', '25min', '30min'];
-const SLEEP_LABEL = { '30s': '30 s', '1min': '1 min', '2min': '2 min', '4min': '4 min', '5min': '5 min', '10min': '10 min', '25min': '25 min', '30min': '30 min' };
+const SLEEP = ['30s', '1min', '2min', '3min', '5min', '20min', '25min', '30min'];
+const SLEEP_LABEL = { '30s': '30 s', '1min': '1 min', '2min': '2 min', '3min': '3 min', '5min': '5 min', '20min': '20 min', '25min': '25 min', '30min': '30 min' };
+const DEBOUNCE = [0, 1, 2, 4, 8, 15, 20];
+const SENSOR = [{ value: 'basic', label: 'Basic' }, { value: 'competitive', label: 'Competitive' }];
+const LIGHT = [{ value: 'close', label: 'Off' }, { value: 'always', label: 'Always on' }, { value: 'breathing', label: 'Breathing' }];
+const BRIGHTNESS = [{ value: 'min', label: 'Low' }, { value: 'medium', label: 'Medium' }, { value: 'max', label: 'High' }];
+const SPEED = [{ value: 'slowest', label: 'Slow' }, { value: 'medium', label: 'Medium' }, { value: 'fastest', label: 'Fast' }];
+
+const nearest = (list, v) => list.reduce((best, x) => (Math.abs(x - v) < Math.abs(best - v) ? x : best), list[0]);
 
 export class MouseSettingsSection {
   constructor() {
@@ -24,9 +31,16 @@ export class MouseSettingsSection {
       v => d.setLod(v),
       { small: true, label: 'Lift-off distance' }
     );
-    const debounce = slider({ label: 'Click debounce', min: 0, max: 20, value: d.debounceMs, format: v => `${v} ms`, onChange: v => d.setDebounce(v) });
+    const sensor = segmented(SENSOR, d.sensorMode, v => d.setSensorMode(v), { small: true, label: 'Sensor mode' });
+    const debounce = segmented(
+      DEBOUNCE.map(v => ({ value: v, label: String(v) })),
+      nearest(DEBOUNCE, d.debounceMs),
+      v => d.setDebounce(v),
+      { small: true, label: 'Click debounce in milliseconds' }
+    );
     const sleepIndex = Math.max(0, SLEEP.indexOf(d.sleepTime));
     const sleep = slider({
+      icon: 'sleep',
       label: 'Sleep after',
       min: 0,
       max: SLEEP.length - 1,
@@ -34,19 +48,46 @@ export class MouseSettingsSection {
       format: i => SLEEP_LABEL[SLEEP[i]],
       onChange: i => d.setSleepTime(SLEEP[i])
     });
-    const flag = (key, label) => row(label, toggle(d[key], on => d.setToggle(key, on), label));
+    const flag = (key, label, icon) => row(label, toggle(d[key], on => d.setToggle(key, on), label), icon);
+
+    const lightDetail = el('div');
+    const paintLight = () => {
+      const rows = [];
+      if (d.dpiLightEffect !== 'close') {
+        rows.push(row('Brightness', segmented(BRIGHTNESS, d.dpiBrightness, v => d.setDpiLight({ brightness: v }), { small: true, label: 'DPI light brightness' }), 'brightness'));
+      }
+      if (d.dpiLightEffect === 'breathing') {
+        rows.push(row('Speed', segmented(SPEED, d.dpiSpeed, v => d.setDpiLight({ speed: v }), { small: true, label: 'DPI light speed' }), 'speed'));
+      }
+      lightDetail.replaceChildren(...rows);
+    };
+    const light = segmented(LIGHT, d.dpiLightEffect, v => {
+      d.setDpiLight({ effect: v });
+      paintLight();
+    }, { small: true, label: 'DPI light effect' });
+    paintLight();
 
     ctx.scroll.replaceChildren(
       header('Settings'),
-      group('Sensor', [row('Polling rate', polling), row('Lift-off distance', lod)]),
+      group('Sensor', [row('Polling rate', polling, 'polling'), row('Lift-off distance', lod, 'liftoff'), stack('Sensor mode', sensor, 'sensor')]),
       group('Tracking', [
-        flag('movementSync', 'Motion sync'),
-        flag('straightCorrection', 'Angle snapping'),
-        flag('rippleCorrection', 'Ripple control')
+        flag('movementSync', 'Motion sync', 'sync'),
+        flag('straightCorrection', 'Angle snapping', 'angle'),
+        flag('rippleCorrection', 'Ripple control', 'ripple')
       ]),
-      group('Clicks', [debounce])
+      group('Clicks', [stack('Click debounce (ms)', debounce, 'click')]),
+      group('Power', [sleep, flag('longRangeMode', 'Ultra long range', 'range')]),
+      group('DPI light', [stack('Effect', light, 'light'), lightDetail])
     );
-    ctx.foot.replaceChildren();
+
+    const s = d.supports || {};
+    const unsaved = [
+      s.sleep === false && 'Sleep',
+      s.sensorMode === false && 'Sensor mode',
+      s.longRange === false && 'Ultra long range',
+      s.dpiLight === false && 'DPI light'
+    ].filter(Boolean);
+    ctx.foot.replaceChildren(...(unsaved.length ? [el('span', { text: `${unsaved.join(', ')} not saved to the mouse yet` })] : []));
   }
 
   leave() {}

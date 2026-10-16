@@ -318,6 +318,12 @@ button {
   color: var(--text-3);
 }
 
+.home-empty {
+  margin: -8px 0 0;
+  font-size: 15px;
+  color: var(--text-2);
+}
+
 .device-page {
   position: absolute;
   inset: 0;
@@ -563,7 +569,7 @@ button {
 .slider-head {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   margin-bottom: 8px;
 }
 
@@ -1175,5 +1181,219 @@ input[type='range']::-moz-range-thumb {
 @media (max-width: 860px) {
   .typing {
     top: 112px;
+  }
+}
+
+.row-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.row-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--text-3);
+  transition: color 220ms var(--ease);
+}
+
+.row-icon svg {
+  width: 18px;
+  height: 18px;
+  overflow: visible;
+}
+
+.row-icon svg * {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.row:hover .row-icon,
+.slider-row:hover .row-icon,
+.row:focus-within .row-icon,
+.slider-row:focus-within .row-icon {
+  color: var(--accent);
+}
+
+.row.stack {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 10px 0 12px;
+}
+
+.row.stack .segmented {
+  display: flex;
+}
+
+.row.stack .segmented button {
+  flex: 1;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.row-icon .i-ground {
+  opacity: 0.5;
+  stroke-dasharray: 1 3.2;
+}
+
+.row-icon .i-core {
+  fill: currentColor;
+  fill-opacity: 0;
+  transition: fill-opacity 260ms var(--ease);
+}
+
+.row-icon .i-ring,
+.row-icon .i-arc,
+.row-icon .i-z {
+  opacity: 0.55;
+}
+
+.row-icon .i-lift,
+.row-icon .i-snapline,
+.row-icon .i-spin,
+.row-icon .i-ticks,
+.row-icon .i-moon,
+.row-icon .i-needle,
+.row-icon .i-bulb {
+  transition: transform 420ms var(--ease), fill-opacity 320ms var(--ease);
+}
+
+.row-icon .i-snapline {
+  transform-box: view-box;
+  transform-origin: 5px 19px;
+}
+
+.row-icon .i-needle {
+  transform-box: view-box;
+  transform-origin: 12px 18px;
+}
+
+.row-icon .i-bulb {
+  fill: currentColor;
+  fill-opacity: 0;
+}
+
+.row:hover .i-lift,
+.row:focus-within .i-lift {
+  transform: translateY(-2.5px);
+}
+
+.row:hover .i-spin,
+.row:focus-within .i-spin {
+  transform: rotate(180deg);
+}
+
+.row:hover .i-snapline,
+.row:focus-within .i-snapline {
+  transform: rotate(35deg);
+}
+
+.row:hover .i-ticks,
+.row:focus-within .i-ticks {
+  transform: rotate(45deg);
+}
+
+.row:hover .i-core,
+.row:focus-within .i-core {
+  fill-opacity: 1;
+}
+
+.row:hover .i-moon,
+.slider-row:hover .i-moon {
+  transform: rotate(-14deg);
+}
+
+.row:hover .i-needle,
+.row:focus-within .i-needle {
+  transform: rotate(70deg);
+}
+
+.row:hover .i-bulb,
+.row:focus-within .i-bulb {
+  fill-opacity: 0.22;
+}
+
+.row:hover .i-trace,
+.row:focus-within .i-trace {
+  stroke-dasharray: 1;
+  animation: icon-trace 900ms var(--ease) both;
+}
+
+.row:hover .i-ring,
+.row:focus-within .i-ring {
+  animation: icon-ring 1100ms ease-out infinite;
+}
+
+.row:hover .i-ring-2,
+.row:focus-within .i-ring-2 {
+  animation-delay: 220ms;
+}
+
+.row:hover .i-arc,
+.row:focus-within .i-arc {
+  animation: icon-arc 1200ms ease-in-out infinite;
+}
+
+.row:hover .i-arc-2,
+.row:focus-within .i-arc-2 {
+  animation-delay: 240ms;
+}
+
+.slider-row:hover .i-z {
+  animation: icon-z 1400ms ease-in-out infinite;
+}
+
+@keyframes icon-trace {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes icon-ring {
+  0% {
+    transform: scale(0.55);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.08);
+    opacity: 0;
+  }
+}
+
+@keyframes icon-arc {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes icon-z {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate(1.5px, -1.5px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row-icon * {
+    animation: none !important;
+    transition: none !important;
   }
 }

@@ -1,3 +1,5 @@
+import { ICONS } from './icons.js';
+
 export function el(tag, attrs = {}, children = []) {
   const node = document.createElement(tag);
   Object.entries(attrs).forEach(([k, v]) => {
@@ -50,7 +52,13 @@ export function segmented(options, value, onChange, { small = false, label = '' 
   return root;
 }
 
-export function slider({ label, min, max, step = 1, value, format = v => String(v), onInput, onChange }) {
+export function title(label, icon) {
+  const text = el('span', { class: 'row-label', text: label });
+  if (!icon || !ICONS[icon]) return text;
+  return el('span', { class: 'row-title' }, [el('span', { class: 'row-icon', html: ICONS[icon] }), text]);
+}
+
+export function slider({ icon, label, min, max, step = 1, value, format = v => String(v), onInput, onChange }) {
   const out = el('span', { class: 'row-value', text: format(value) });
   const input = el('input', { type: 'range', min, max, step, value, 'aria-label': label });
   const paint = () => {
@@ -67,7 +75,7 @@ export function slider({ label, min, max, step = 1, value, format = v => String(
     if (onChange) onChange(Number(input.value));
   });
   const root = el('div', { class: 'slider-row' }, [
-    el('div', { class: 'slider-head' }, [el('span', { class: 'row-label', text: label }), out]),
+    el('div', { class: 'slider-head' }, [title(label, icon), out]),
     input
   ]);
   root.setValue = v => {
@@ -87,8 +95,12 @@ export function toggle(checked, onChange, label) {
   return b;
 }
 
-export function row(label, control) {
-  return el('div', { class: 'row' }, [el('span', { class: 'row-label', text: label }), control]);
+export function row(label, control, icon) {
+  return el('div', { class: 'row' }, [title(label, icon), control]);
+}
+
+export function stack(label, control, icon) {
+  return el('div', { class: 'row stack' }, [title(label, icon), control]);
 }
 
 export function group(label, children) {

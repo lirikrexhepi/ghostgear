@@ -16,7 +16,7 @@ export class VXER1Device extends BaseMouseDevice {
       battery: 85
     });
     this.pending = null;
-    this.supports = { sleep: false, longRange: false, buttons: false };
+    this.supports = { sleep: false, longRange: false, sensorMode: false, dpiLight: false, buttons: false };
   }
 
   async connect() {
