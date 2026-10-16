@@ -23,13 +23,6 @@ export const VIEWER_THEME = {
     sensorWindow: '#1A1A1A',
     led: '#7CF2A5'
   },
-  headset: {
-    shell: '#1d1d21',
-    pad: '#1f1f23',
-    baffle: '#2a2a2e',
-    metal: '#5a5d63',
-    accent: '#E31B23'
-  },
   interaction: {
     hover: '#8FB8FF',
     selected: '#2F7BFF',

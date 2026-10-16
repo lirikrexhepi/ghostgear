@@ -1,6 +1,6 @@
 # viewer3d
 
-Procedural three.js models of the Meetion MK12 (white), VXE Dragonfly R1 SE+ (white) and HyperX Cloud III (black and red, display only, orbit and auto-rotate), driven by app state. No pre-made assets, no extra dependencies beyond `three`.
+Procedural three.js models of the Meetion MK12 (white) and VXE Dragonfly R1 SE+ (white), driven by app state. No pre-made assets, no extra dependencies beyond `three`.
 
 ```js
 import { createDeviceViewer } from './viewer3d/index.js';

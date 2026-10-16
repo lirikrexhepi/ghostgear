@@ -14,6 +14,7 @@ import { ButtonsSection } from '../sections/buttons.js';
 import { DpiSection } from '../sections/dpi.js';
 import { MouseSettingsSection } from '../sections/mouse-settings.js';
 import { HeadsetAudioSection } from '../sections/headset-settings.js';
+import headsetImage from '../../assets/images/cloud3_headset.png';
 
 const CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
 
@@ -98,14 +99,25 @@ export class DeviceView {
 
     this.panelVisible = true;
     this.syncTyping();
-    this.mount3d = mountDevice3D(stage, this.device, {
-      insetRight: this.insetRight(),
-      reserveRight: this.insetRight(),
-      partNames: this.partNames(),
-      describe: id => (this.active && this.active.describe ? this.active.describe(id) : null),
-      onClick: (id, info) => this.active && this.active.onPartClick && this.active.onPartClick(id, info),
-      onSelectionChange: ids => this.active && this.active.onSelection && this.active.onSelection(ids)
-    });
+    if (this.device.type === 'headset') {
+      stage.appendChild(el('div', { class: 'stage-media' }, [
+        el('img', { src: headsetImage, alt: this.device.displayName })
+      ]));
+      this.mount3d = {
+        ready: Promise.resolve(null),
+        viewer: null,
+        destroy: () => {}
+      };
+    } else {
+      this.mount3d = mountDevice3D(stage, this.device, {
+        insetRight: this.insetRight(),
+        reserveRight: this.insetRight(),
+        partNames: this.partNames(),
+        describe: id => (this.active && this.active.describe ? this.active.describe(id) : null),
+        onClick: (id, info) => this.active && this.active.onPartClick && this.active.onPartClick(id, info),
+        onSelectionChange: ids => this.active && this.active.onSelection && this.active.onSelection(ids)
+      });
+    }
 
     this.onResize = () => {
       this.syncTyping();

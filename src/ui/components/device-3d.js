@@ -18,7 +18,7 @@ export function prewarmDevice3D(types = ['keyboard', 'mouse']) {
 }
 
 export function mountDevice3D(container, device, options = {}) {
-  const type = device.type === 'mouse' || device.type === 'headset' ? device.type : 'keyboard';
+  const type = device.type === 'mouse' ? 'mouse' : 'keyboard';
   let viewer = null;
   let destroyed = false;
   let offTheme = null;
@@ -28,7 +28,7 @@ export function mountDevice3D(container, device, options = {}) {
     viewer = acquireDeviceViewer(container, {
       device: type,
       theme: state.theme === 'dark' ? 'dark' : 'light',
-      autoRotate: options.autoRotate != null ? !!options.autoRotate : type === 'headset',
+      autoRotate: !!options.autoRotate,
       describe: options.describe || null,
       partNames: options.partNames || null,
       onHover: options.onHover || null,
