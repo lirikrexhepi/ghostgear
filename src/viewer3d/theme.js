@@ -27,6 +27,7 @@ export const VIEWER_THEME = {
     shell: '#1d1d21',
     pad: '#1f1f23',
     baffle: '#2a2a2e',
+    plate: '#151518',
     metal: '#5a5d63',
     accent: '#E31B23'
   },
