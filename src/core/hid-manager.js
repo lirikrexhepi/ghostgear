@@ -6,6 +6,8 @@ import { toast } from '../ui/toast.js';
 class HidManager {
   constructor() {
     this.isSupported = typeof navigator !== 'undefined' && 'hid' in navigator;
+    this.restored = !this.isSupported;
+    this.restoring = null;
   }
 
   init() {
@@ -22,12 +24,27 @@ class HidManager {
       }
     });
 
-    // Check previously granted devices
+    navigator.hid.addEventListener('connect', () => {
+      this.checkAuthorizedDevices();
+    });
+
     this.checkAuthorizedDevices();
   }
 
-  async checkAuthorizedDevices() {
-    if (!this.isSupported) return;
+  checkAuthorizedDevices() {
+    if (!this.isSupported) return Promise.resolve();
+    if (this.restoring) return this.restoring;
+    this.restoring = this.restoreAuthorizedDevices().finally(() => {
+      this.restoring = null;
+      if (!this.restored) {
+        this.restored = true;
+        eventBus.emit('devices:restored');
+      }
+    });
+    return this.restoring;
+  }
+
+  async restoreAuthorizedDevices() {
     try {
       const all = await navigator.hid.getDevices();
       const byId = new Map();
@@ -37,14 +54,19 @@ class HidManager {
         const prev = byId.get(key);
         if (!prev || score(d) > score(prev)) byId.set(key, d);
       });
-      const devices = Array.from(byId.values());
-      for (const hidDev of devices) {
-        const devInstance = DeviceRegistry.createFromHidDevice(hidDev);
-        if (devInstance) {
-          await devInstance.connect();
-          state.addDevice(devInstance);
+      const known = d => state.devices.some(x => !x.isMock && x.vendorId === d.vendorId && x.productId === d.productId);
+      const devices = Array.from(byId.values()).filter(d => !known(d));
+      await Promise.all(devices.map(async hidDev => {
+        try {
+          const devInstance = DeviceRegistry.createFromHidDevice(hidDev);
+          if (devInstance) {
+            await devInstance.connect();
+            state.addDevice(devInstance);
+          }
+        } catch (e) {
+          console.warn('Could not reconnect a saved device:', e);
         }
-      }
+      }));
     } catch (e) {
       console.error('Failed to get authorized HID devices:', e);
     }

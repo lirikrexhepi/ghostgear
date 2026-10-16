@@ -1,6 +1,5 @@
 import { state } from '../../core/state.js';
 import { hidManager } from '../../core/hid-manager.js';
-import { DeviceRegistry } from '../../devices/registry.js';
 import { eventBus } from '../../core/event-bus.js';
 import keyboardImage from '../../assets/images/mk12_keyboard.png';
 import mouseImage from '../../assets/images/r1_mouse.png';
@@ -39,26 +38,12 @@ export class HomeView {
     this.onChange = () => {
       if (this.container.isConnected) this.render();
     };
-    this.ensureDemoDevices();
     this.render();
-    this.offs = ['device:added', 'device:removed', 'device:battery'].map(ev => eventBus.on(ev, this.onChange));
+    this.offs = ['device:added', 'device:removed', 'device:battery', 'devices:restored'].map(ev => eventBus.on(ev, this.onChange));
   }
 
   destroy() {
     this.offs.forEach(off => off());
-  }
-
-  ensureDemoDevices() {
-    if (state.devices.length > 0) return;
-    const demoKb = DeviceRegistry.createMockDevice('keyboard');
-    demoKb.id = 'demo-keyboard';
-    const demoMouse = DeviceRegistry.createMockDevice('mouse');
-    demoMouse.id = 'demo-mouse';
-    const demoHeadset = DeviceRegistry.createMockDevice('headset');
-    demoHeadset.id = 'demo-headset';
-    state.addDevice(demoKb);
-    state.addDevice(demoMouse);
-    state.addDevice(demoHeadset);
   }
 
   render() {
@@ -93,6 +78,7 @@ export class HomeView {
         <div class="device-grid">
           ${cards}
         </div>
+        ${state.devices.length === 0 && hidManager.restored ? '<p class="home-note home-empty">No devices connected. Plug in your receiver or cable, then press +.</p>' : ''}
         <p class="home-note">Use the receiver or a cable. Bluetooth isn't supported.</p>
         <button class="home-add" id="btn-add" aria-label="Add device">${PLUS}</button>
       </div>
