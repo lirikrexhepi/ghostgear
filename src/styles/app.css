@@ -1397,3 +1397,27 @@ input[type='range']::-moz-range-thumb {
     transition: none !important;
   }
 }
+
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.row-actions .row-value {
+  font-size: 12px;
+  text-align: right;
+}
+
+.row-icon .i-chip {
+  transition: transform 420ms var(--ease);
+}
+
+.row:hover .i-chip {
+  transform: scale(0.82);
+}
+
+.row:hover .i-link {
+  animation: icon-arc 1200ms ease-in-out infinite;
+}

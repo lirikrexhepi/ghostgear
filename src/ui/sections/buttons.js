@@ -1,6 +1,6 @@
 import { el, group, header, CHECK } from '../controls.js';
 
-const ACTIONS = ['Left Click', 'Right Click', 'Middle Click', 'Forward', 'Back', 'DPI Cycle', 'Disabled'];
+const ACTIONS = ['Left Click', 'Right Click', 'Middle Click', 'Forward', 'Back', 'DPI Cycle', 'DPI Up', 'DPI Down', 'Disabled'];
 const FLIP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.7"/><path d="M20 4v4.7h-4.7"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15.3"/><path d="M4 20v-4.7h4.7"/></svg>';
 
 export class ButtonsSection {
@@ -92,7 +92,7 @@ export class ButtonsSection {
         this.syncLabels();
         this.render();
       });
-      foot.append(el('span', { text: 'Not saved to the mouse yet' }), changed ? reset : el('span'));
+      foot.append(el('span', { text: this.device.isMock ? 'Demo device' : 'Saved to the mouse' }), changed ? reset : el('span'));
       return;
     }
     const b = this.button(this.selected);

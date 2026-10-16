@@ -1,6 +1,6 @@
 import { BaseMouseDevice } from './mouse-base.js';
 import { eventBus } from '../../core/event-bus.js';
-import { VXE, buildFrame, check, rateFromCode, decodeDpi, encodeDpi } from './vxe-protocol.js';
+import { VXE, buildFrame, check, rateFromCode, decodeDpi, encodeDpi, reverseLookup, encodeAction, decodeAction } from './vxe-protocol.js';
 
 const COLORS = ['#FF453A', '#0A84FF', '#30D158', '#FFD60A', '#BF5AF2', '#FF9F0A', '#64D2FF', '#FF375F'];
 const TOGGLE_ADDR = { movementSync: VXE.ADDR.motionSync, straightCorrection: VXE.ADDR.angleSnap, rippleCorrection: VXE.ADDR.ripple };
@@ -16,7 +16,9 @@ export class VXER1Device extends BaseMouseDevice {
       battery: 85
     });
     this.pending = null;
-    this.supports = { sleep: false, longRange: false, sensorMode: false, dpiLight: false, buttons: false };
+    this.supports = { sleep: true, longRange: true, sensorMode: true, dpiLight: true, buttons: true };
+    this.firmware = null;
+    this.pairing = null;
   }
 
   async connect() {
@@ -116,6 +118,57 @@ export class VXER1Device extends BaseMouseDevice {
     this.movementSync = !!(await this.get(VXE.ADDR.motionSync, 2))[0];
     this.straightCorrection = !!(await this.get(VXE.ADDR.angleSnap, 2))[0];
     this.rippleCorrection = !!(await this.get(VXE.ADDR.ripple, 2))[0];
+    await this.readExtras();
+  }
+
+  async readExtras() {
+    const attempt = async task => {
+      try {
+        await task();
+      } catch (e) {
+        console.warn('Could not read a setting from the mouse:', e);
+      }
+    };
+    await attempt(async () => {
+      const seconds = (await this.get(VXE.ADDR.sleep, 2))[0] * 10;
+      this.sleepTime = reverseLookup(VXE.SLEEP_SECONDS, seconds, this.sleepTime);
+    });
+    await attempt(async () => {
+      const b = await this.get(VXE.ADDR.performance, 6);
+      this.sensorMode = b[4] ? 'competitive' : 'basic';
+    });
+    await attempt(async () => {
+      const d = await this.transfer(VXE.CMD_FAR_GET, 0, 0);
+      this.longRangeMode = !!d[5];
+    });
+    await attempt(async () => {
+      const b = await this.get(VXE.ADDR.dpiLight, 8);
+      this.dpiLightEffect = b[6] ? reverseLookup(VXE.LIGHT_MODE, b[0], 'always') : 'close';
+      this.dpiBrightness = reverseLookup(VXE.LIGHT_BRIGHTNESS, b[2], 'medium');
+      this.dpiSpeed = reverseLookup(VXE.LIGHT_SPEED, b[4], 'medium');
+    });
+    await attempt(async () => {
+      const d = await this.transfer(VXE.CMD_VERSION, 0, 0);
+      this.firmware = `${d[5].toString(16)}.${d[6].toString(16).padStart(2, '0')}`;
+    });
+    await attempt(async () => {
+      for (let i = 0; i < this.buttons.length; i += 2) {
+        const b = await this.get(VXE.ADDR.buttons[i], 8);
+        for (let k = 0; k < 2; k += 1) {
+          const slot = this.buttons[this.slotToButton(i + k)];
+          if (slot) slot.currentAction = decodeAction(b[k * 4], b[k * 4 + 1], b[k * 4 + 2]) || 'Custom';
+        }
+      }
+    });
+  }
+
+  slotToButton(slot) {
+    const order = ['btn_left', 'btn_right', 'btn_middle', 'btn_back', 'btn_forward', 'btn_dpi'];
+    return this.buttons.findIndex(b => b.id === order[slot]);
+  }
+
+  buttonSlot(btnId) {
+    return ['btn_left', 'btn_right', 'btn_middle', 'btn_back', 'btn_forward', 'btn_dpi'].indexOf(btnId);
   }
 
   async updateBlock0(mutate) {
@@ -195,8 +248,75 @@ export class VXER1Device extends BaseMouseDevice {
   }
 
   async setToggle(key, value) {
+    if (key === 'longRangeMode') return this.setLongRange(value);
     await super.setToggle(key, value);
     if (TOGGLE_ADDR[key] != null) await this.setField(TOGGLE_ADDR[key], value ? 1 : 0);
     return true;
+  }
+
+  async setSleepTime(label) {
+    await super.setSleepTime(label);
+    const seconds = VXE.SLEEP_SECONDS[label];
+    if (this.isMock || !seconds) return true;
+    const t = seconds / 10;
+    await this.setField(VXE.ADDR.sleep, t);
+    const b = await this.get(VXE.ADDR.performance, 6);
+    b[0] = 1;
+    b[1] = check(1);
+    b[2] = t;
+    b[3] = check(t);
+    await this.set(VXE.ADDR.performance, b);
+    return true;
+  }
+
+  async setSensorMode(mode) {
+    await super.setSensorMode(mode);
+    if (this.isMock) return true;
+    const v = mode === 'competitive' ? 1 : 0;
+    const b = await this.get(VXE.ADDR.performance, 6);
+    b[4] = v;
+    b[5] = check(v);
+    await this.set(VXE.ADDR.performance, b);
+    return true;
+  }
+
+  async setLongRange(on) {
+    this.longRangeMode = on;
+    eventBus.emit('mouse:param_updated', { key: 'longRangeMode', value: on });
+    if (this.isMock) return true;
+    await this.transfer(VXE.CMD_FAR_SET, 0, 10, [on ? 1 : 0]);
+    return true;
+  }
+
+  async setDpiLight(patch) {
+    await super.setDpiLight(patch);
+    if (this.isMock) return true;
+    const b = await this.get(VXE.ADDR.dpiLight, 8);
+    const enabled = this.dpiLightEffect === 'close' ? 0 : 1;
+    const mode = VXE.LIGHT_MODE[this.dpiLightEffect] || (b[0] === 1 || b[0] === 2 ? b[0] : 1);
+    const brightness = VXE.LIGHT_BRIGHTNESS[this.dpiBrightness];
+    const speed = VXE.LIGHT_SPEED[this.dpiSpeed];
+    const next = [mode, check(mode), brightness, check(brightness), speed, check(speed), enabled, check(enabled)];
+    await this.set(VXE.ADDR.dpiLight, next);
+    return true;
+  }
+
+  async remapButton(btnId, action) {
+    const slot = this.buttonSlot(btnId);
+    const bytes = encodeAction(action);
+    if (!this.isMock && slot >= 0 && bytes) await this.set(VXE.ADDR.buttons[slot], bytes);
+    return super.remapButton(btnId, action);
+  }
+
+  async startPairing() {
+    if (this.isMock) return null;
+    const id = await this.transfer(VXE.CMD_CIDMID, 0, 0);
+    await this.transfer(VXE.CMD_PAIR, 0, 2, [id[5], id[6]]);
+    return this.pairingStatus();
+  }
+
+  async pairingStatus() {
+    const d = await this.transfer(VXE.CMD_PAIR_STATUS, 0, 0);
+    return { status: d[5], secondsLeft: d[6] };
   }
 }
