@@ -14,9 +14,11 @@ import { ButtonsSection } from '../sections/buttons.js';
 import { DpiSection } from '../sections/dpi.js';
 import { MouseSettingsSection } from '../sections/mouse-settings.js';
 import { HeadsetAudioSection } from '../sections/headset-settings.js';
-import headsetImage from '../../assets/images/cloud3_headset.png';
 
 const CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+
+const HEADSET_EMBED = 'https://sketchfab.com/models/6f4043e2ef664e51a28cfb393a93888f/embed';
+const HEADSET_PAGE = 'https://sketchfab.com/3d-models/hyperx-headphone-6f4043e2ef664e51a28cfb393a93888f';
 
 const lastSection = new Map();
 let nudged = false;
@@ -100,9 +102,22 @@ export class DeviceView {
     this.panelVisible = true;
     this.syncTyping();
     if (this.device.type === 'headset') {
-      stage.appendChild(el('div', { class: 'stage-media' }, [
-        el('img', { src: headsetImage, alt: this.device.displayName })
-      ]));
+      const frame = el('iframe', {
+        class: 'embed-frame',
+        title: 'HyperX Headphone',
+        src: `${HEADSET_EMBED}?autostart=1&preload=1&ui_hint=0&ui_infos=0&ui_inspector=0&dnt=1`,
+        allow: 'autoplay; fullscreen; xr-spatial-tracking',
+        allowfullscreen: true,
+        loading: 'lazy'
+      });
+      const credit = el('p', { class: 'embed-credit' }, [
+        el('a', { href: HEADSET_PAGE, target: '_blank', rel: 'nofollow noopener', text: 'HyperX Headphone' }),
+        ' by ',
+        el('a', { href: 'https://sketchfab.com/Mohamed-amr', target: '_blank', rel: 'nofollow noopener', text: 'Mohamed-amr' }),
+        ' on ',
+        el('a', { href: 'https://sketchfab.com', target: '_blank', rel: 'nofollow noopener', text: 'Sketchfab' })
+      ]);
+      stage.appendChild(el('div', { class: 'stage-embed' }, [frame, credit]));
       this.mount3d = {
         ready: Promise.resolve(null),
         viewer: null,
