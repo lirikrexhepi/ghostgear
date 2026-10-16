@@ -18,6 +18,7 @@ import { HeadsetAudioSection } from '../sections/headset-settings.js';
 const CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
 
 const HEADSET_EMBED = 'https://sketchfab.com/models/6f4043e2ef664e51a28cfb393a93888f/embed';
+const HEADSET_EMBED_PARAMS = ['autostart=1', 'preload=1', 'transparent=1', 'dnt=1', 'ui_controls=0', 'ui_infos=0', 'ui_stop=0', 'ui_inspector=0', 'ui_watermark=0', 'ui_watermark_link=0', 'ui_ar=0', 'ui_help=0', 'ui_settings=0', 'ui_vr=0', 'ui_fullscreen=0', 'ui_annotations=0', 'ui_hint=0', 'ui_loading=0'].join('&');
 const HEADSET_PAGE = 'https://sketchfab.com/3d-models/hyperx-headphone-6f4043e2ef664e51a28cfb393a93888f';
 
 const lastSection = new Map();
@@ -105,7 +106,7 @@ export class DeviceView {
       const frame = el('iframe', {
         class: 'embed-frame',
         title: 'HyperX Headphone',
-        src: `${HEADSET_EMBED}?autostart=1&preload=1&ui_hint=0&ui_infos=0&ui_inspector=0&dnt=1`,
+        src: `${HEADSET_EMBED}?${HEADSET_EMBED_PARAMS}`,
         allow: 'autoplay; fullscreen; xr-spatial-tracking',
         allowfullscreen: true,
         loading: 'lazy'
